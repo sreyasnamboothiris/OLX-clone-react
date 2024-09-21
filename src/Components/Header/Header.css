@@ -112,8 +112,9 @@
   height: 2px;
 }
 
-.loginPage a{
+.loginPage span{
   text-decoration: none;
+  color: black;
 }
 
 .sellMenu {

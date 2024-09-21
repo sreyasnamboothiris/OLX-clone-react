@@ -1,9 +1,35 @@
-import React from 'react';
-
+import React, { useContext, useEffect, useState } from 'react';
 import Heart from '../../assets/Heart';
 import './Post.css';
+import { FirebaseContext } from '../../store/Context';
+import { PostContext } from '../../store/PostContext';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../store/Context';
+
 
 function Posts() {
+  const { firebase } = useContext(FirebaseContext);
+  const [products, setProducts] = useState([]);
+  const { setPostDetails } = useContext(PostContext);
+  const navigate = useNavigate()
+  const {sample,setSample} = useContext(AuthContext);
+
+  useEffect(() => {
+    firebase
+      .firestore()
+      .collection('products')
+      .orderBy('createdAt', 'desc') // Order by 'createdAt' field in descending order
+      .get()
+      .then((snapshot) => {
+        const allPost = snapshot.docs.map((product) => {
+          return {
+            ...product.data(),
+            id: product.id,
+          };
+        });
+        setProducts(allPost);
+      });
+  }, [firebase]);
 
   return (
     <div className="postParentDiv">
@@ -11,49 +37,64 @@ function Posts() {
         <div className="heading">
           <span>Quick Menu</span>
           <span>View more</span>
+          <input type='text' onChange={(e)=>{setSample(e.target.value)}}></input>
         </div>
+
         <div className="cards">
-          <div
-            className="card"
-          >
-            <div className="favorite">
-              <Heart></Heart>
-            </div>
-            <div className="image">
-              <img src="../../../Images/R15V3.jpg" alt="" />
-            </div>
-            <div className="content">
-              <p className="rate">&#x20B9; 250000</p>
-              <span className="kilometer">Two Wheeler</span>
-              <p className="name"> YAMAHA R15V3</p>
-            </div>
-            <div className="date">
-              <span>Tue May 04 2021</span>
-            </div>
-          </div>
+          {products.map((product) => {
+            return (
+              <div
+                className="card"
+                onClick={() => {
+                  setPostDetails(product);
+                  localStorage.setItem('postDetails', JSON.stringify(product));
+                  navigate('/view');
+                }}
+                key={product.id} // Add a unique key for each element
+              >
+                <div className="favorite">
+                  <Heart></Heart>
+                </div>
+                <div className="image">
+                  <img src={product.url} alt="" />
+                </div>
+                <div className="content">
+                  <p className="rate">&#x20B9; {product.price}</p>
+                  <span className="kilometer">{product.category}</span>
+                  <p className="name"> {product.name}</p>
+                </div>
+                <div className="date">
+                  <span>{product.createdAt}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
+
       <div className="recommendations">
         <div className="heading">
-          <span>Fresh recommendations</span>
+          <span>Fresh Recommendations</span>
         </div>
         <div className="cards">
-          <div className="card">
-            <div className="favorite">
-              <Heart></Heart>
+          {products.map((product) => (
+            <div className="card" key={product.id}>
+              <div className="favorite">
+                <Heart></Heart>
+              </div>
+              <div className="image">
+                <img src={product.url} alt="" />
+              </div>
+              <div className="content">
+                <p className="rate">&#x20B9; {product.price}</p>
+                <span className="kilometer">{product.category}</span>
+                <p className="name"> {product.name}</p>
+              </div>
+              <div className="date">
+                <span>{product.createdAt}</span>
+              </div>
             </div>
-            <div className="image">
-              <img src="../../../Images/R15V3.jpg" alt="" />
-            </div>
-            <div className="content">
-              <p className="rate">&#x20B9; 250000</p>
-              <span className="kilometer">Two Wheeler</span>
-              <p className="name"> YAMAHA R15V3</p>
-            </div>
-            <div className="date">
-              <span>10/5/2021</span>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
@@ -61,3 +102,4 @@ function Posts() {
 }
 
 export default Posts;
+
